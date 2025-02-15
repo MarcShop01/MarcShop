@@ -35,12 +35,21 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 
-    // Fonction pour ajouter un produit au panier (simplifiée)
+    // Fonction pour ajouter un produit au panier avec gestion de la quantité
     function addToCart(productId) {
-        const cart = JSON.parse(localStorage.getItem("cart")) || [];
-        const product = products.find(p => p.id === productId);
+        let cart = JSON.parse(localStorage.getItem("cart")) || [];
+        let product = products.find(p => p.id === productId);
+
         if (product) {
-            cart.push(product);
+            let existingProduct = cart.find(p => p.id === productId);
+            
+            if (existingProduct) {
+                existingProduct.quantity += 1;
+            } else {
+                product.quantity = 1;
+                cart.push(product);
+            }
+
             localStorage.setItem("cart", JSON.stringify(cart));
             alert(${product.name} ajouté au panier !);
         }
