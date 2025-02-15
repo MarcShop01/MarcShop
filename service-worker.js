@@ -1,6 +1,4 @@
-// service-worker.js
-
-const CACHE_NAME = 'marcshop-cache-v1';
+const CACHE_NAME = 'marcshop-cache-v2'; // Incrémente la version pour forcer la mise à jour
 const urlsToCache = [
     '/',
     '/index.html',
@@ -8,48 +6,47 @@ const urlsToCache = [
     '/produits.html',
     '/styles.css',
     '/scripts.js',
-    '/images/icon-192x192.png', // Assurez-vous de lier correctement vos icônes
+    '/images/icon-192x192.png',
     '/images/icon-512x512.png'
 ];
 
-// Lors de l'installation du service worker, nous mettons en cache les fichiers nécessaires
+// 📌 Installation du service worker et mise en cache des fichiers
 self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(CACHE_NAME)
             .then((cache) => {
+                console.log('[Service Worker] Mise en cache des fichiers...');
                 return cache.addAll(urlsToCache);
             })
+            .then(() => self.skipWaiting()) // Activation immédiate
     );
 });
 
-// Lors de la récupération de ressources (par exemple, lors de l'accès à des pages), nous les servons depuis le cache si elles sont disponibles
-self.addEventListener('fetch', (event) => {
-    event.respondWith(
-        caches.match(event.request)
-            .then((cachedResponse) => {
-                // Si la ressource est dans le cache, la retourner
-                if (cachedResponse) {
-                    return cachedResponse;
-                }
-
-                // Sinon, effectuer la requête réseau
-                return fetch(event.request);
-            })
-    );
-});
-
-// Lors de la mise à jour du service worker, nous supprimons les anciennes versions du cache
+// 📌 Activation : Nettoyage des anciens caches
 self.addEventListener('activate', (event) => {
-    const cacheWhitelist = [CACHE_NAME];
     event.waitUntil(
         caches.keys().then((cacheNames) => {
             return Promise.all(
-                cacheNames.map((cacheName) => {
-                    if (!cacheWhitelist.includes(cacheName)) {
-                        return caches.delete(cacheName);
+                cacheNames.map((cache) => {
+                    if (cache !== CACHE_NAME) {
+                        console.log([Service Worker] Suppression de l'ancien cache: ${cache});
+                        return caches.delete(cache);
                     }
                 })
             );
         })
     );
+    self.clients.claim(); // Prend le contrôle immédiatement
 });
+
+// 📌 Interception des requêtes et gestion du cache
+self.addEventListener('fetch', (event) => {
+    event.respondWith(
+        caches.match(event.request)
+            .then((cachedResponse) => {
+                if (cachedResponse) {
+                    // Retourne la réponse du cache et met à jour en arrière-plan
+                    fetch(event.request).then((response) => {
+                        caches.open(CACHE_NAME).then((cache) => {
+                            cache.put(event.request, response.clone());
+                        });
