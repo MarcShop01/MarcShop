@@ -14,13 +14,17 @@
         <form id="signup-form">
             <label for="email">Email :</label>
             <input type="email" id="email" required>
+            
             <label for="password">Mot de passe :</label>
             <input type="password" id="password" required>
+            <small>Doit contenir au moins 8 caractères, une majuscule et un chiffre.</small>
+            
             <label for="confirm-password">Confirmer le mot de passe :</label>
             <input type="password" id="confirm-password" required>
+            
             <button type="submit">S'inscrire</button>
         </form>
-        <p id="welcome-message"></p>
+        <p id="message"></p>
     </main>
     <script src="scripts.js"></script>
 </body>
